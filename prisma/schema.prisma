@@ -1,5 +1,7 @@
-// Esquema base. Por ahora solo la tabla Semana, para probar la conexión.
-// Más adelante se extiende con los días (efectivo/sinpe), cierre y usuarios.
+// Una Semana es un cierre (Lunes a Domingo) y nunca se borra: es el historial.
+// Cada Semana tiene hasta 7 DiaCierre con los montos de efectivo y sinpe.
+// Los montos son colones enteros (Int), sin céntimos.
+// Más adelante se agrega el usuario dueño del cierre.
 
 generator client {
   provider = "prisma-client"
@@ -11,10 +13,24 @@ datasource db {
 }
 
 model Semana {
-  id          Int      @id @default(autoincrement())
-  fechaInicio DateTime @db.Date
-  fechaFin    DateTime @db.Date
-  creadaEn    DateTime @default(now())
+  id            Int         @id @default(autoincrement())
+  fechaInicio   DateTime    @unique @db.Date // siempre un lunes
+  fechaFin      DateTime    @db.Date // siempre el domingo siguiente
+  creadaEn      DateTime    @default(now())
+  actualizadaEn DateTime    @default(now()) @updatedAt
+  dias          DiaCierre[]
 
   @@map("semanas")
+}
+
+model DiaCierre {
+  id       Int      @id @default(autoincrement())
+  semanaId Int
+  semana   Semana   @relation(fields: [semanaId], references: [id])
+  fecha    DateTime @db.Date
+  efectivo Int      @default(0)
+  sinpe    Int      @default(0)
+
+  @@unique([semanaId, fecha])
+  @@map("dias_cierre")
 }

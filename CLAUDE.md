@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 "Cierre Semanal": web app para el cierre de caja semanal de un negocio de canchas (Lunes–Domingo, columnas Efectivo y Sinpe, totales por fila y semanales, rango de fechas autogenerado, historial de semanas cerradas que nunca se borran). Multi-dispositivo y pensada para agregar usuarios después. La UI y los mensajes están en español.
 
-**Estado actual: solo scaffold.** Existe la conexión a Postgres, la tabla `semanas` y una página que muestra el estado de la conexión. Todavía NO están implementados la tabla Lun–Dom, los totales, el cierre/historial ni los usuarios; se construyen paso a paso.
+**Estado actual:** implementada la tabla de cierre de la semana actual (Lun–Dom, Efectivo/Sinpe, totales en vivo) con guardado en DB. Pendiente: historial de semanas cerradas, usuarios y autenticación (hoy cualquiera puede escribir en `/api/cierre`).
 
 ## Comandos
 
@@ -34,9 +34,13 @@ No hay framework de tests configurado todavía.
   - `prisma/schema.prisma`: el cliente se genera en `src/generated/prisma` (gitignored; se regenera en `postinstall`). Se importa desde `@/generated/prisma/client`. El datasource no lleva `url`.
   - `prisma.config.ts`: define la URL del datasource y carga `.env.local` (lo que usa Next) además de `.env`.
   - `src/lib/prisma.ts`: `getPrisma()` crea el cliente de forma perezosa con el adapter `PrismaPg` y lo guarda en `globalThis`. Lanza error si falta `DATABASE_URL`, por eso los llamadores deben capturarlo (la app arranca sin DB).
-- **Backend = Route Handlers** en `src/app/api/**/route.ts` (ej. `api/health`).
+- **Backend = Route Handlers** en `src/app/api/**/route.ts`: `api/cierre` (POST, valida y hace upsert de la `Semana` + 7 `DiaCierre`; volver a guardar la misma semana corrige los montos, nunca se borra) y `api/health`.
+- **Modelo:** `Semana` (`fechaInicio` único, siempre lunes) 1—N `DiaCierre` (`efectivo`/`sinpe` en colones enteros, `Int`). Fechas como string `YYYY-MM-DD` y columnas `@db.Date`.
+- **`src/lib/semana.ts`:** lógica pura (semana Lun–Dom, "hoy" en zona `America/Costa_Rica` porque el servidor corre en UTC, formato de montos, validación del POST). La página (`src/app/page.tsx`) lee la semana actual en un componente async con `connection()` y se la pasa al componente cliente `src/components/tabla-cierre.tsx`, que calcula todos los totales en vivo sin ir a la DB.
 - ESLint (`react-hooks/error-boundaries`) prohíbe construir JSX dentro de `try/catch`: capturar el error en una función aparte que devuelva un resultado y renderizar fuera (patrón en `src/app/page.tsx`).
 
 ## Entorno
 
-Copiar `.env.example` a `.env.local` y completar `DATABASE_URL`. El esquema se crea con `npm run db:push`. Sin `DATABASE_URL`, la página muestra "Base de datos no conectada" y `/api/health` responde 500 controlado.
+Copiar `.env.example` a `.env.local` y completar `DATABASE_URL`. El esquema se crea con `npm run db:push`. Sin `DATABASE_URL`, la tabla igual se muestra (con aviso) y `/api/health` responde 500 controlado.
+
+Para probar el guardado sin tocar la DB real: `npx prisma dev --detach --name test` levanta un Postgres local desechable; apuntar `DATABASE_URL` a su URL TCP al correr `db:push` y `npm run dev` (las variables ya definidas en el entorno tienen prioridad sobre `.env.local`).
