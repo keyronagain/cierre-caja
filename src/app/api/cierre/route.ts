@@ -3,6 +3,8 @@ import { getPrisma } from "@/lib/prisma";
 import {
   aFechaDB,
   diasDeSemana,
+  hoyISO,
+  inicioDeSemana,
   sumarDias,
   validarCierre,
 } from "@/lib/semana";
@@ -25,6 +27,13 @@ export async function POST(request: Request) {
     );
   }
   const { fechaInicio, dias } = validacion.datos;
+
+  if (fechaInicio > inicioDeSemana(hoyISO())) {
+    return NextResponse.json(
+      { ok: false, error: "No se puede cerrar una semana que aún no empieza" },
+      { status: 400 },
+    );
+  }
 
   try {
     const prisma = getPrisma();

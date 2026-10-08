@@ -1,22 +1,61 @@
 @import "tailwindcss";
 
+/* El modo oscuro se activa con la clase `dark` en <html> (ver el script en layout.tsx
+   y el selector de tema), que por defecto sigue la preferencia del sistema. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   color-scheme: light;
-  --background: #f1f5ec; /* tiza: blanco cálido con un toque verde */
-  --foreground: #052e16;
+  --fondo: #f1f5ec; /* tiza: blanco cálido con un toque verde */
+  --brillo: rgb(187 247 208 / 0.55);
+  --superficie: #ffffff;
+  --superficie-suave: rgb(255 255 255 / 0.7);
+  --tinta: #052e16;
+  --tinta-suave: rgb(20 83 45 / 0.72);
+  --tinta-tenue: rgb(20 83 45 / 0.3);
+  --linea: rgb(20 83 45 / 0.12);
+  --campo: rgb(240 253 244 / 0.7);
+  --campo-foco: #ffffff;
+  --hoy: #f7fee7;
+  --sombra: rgb(20 83 45 / 0.25);
+}
+
+.dark {
+  color-scheme: dark;
+  --fondo: #06130b;
+  --brillo: rgb(22 101 52 / 0.35);
+  --superficie: #0e2217;
+  --superficie-suave: rgb(14 34 23 / 0.7);
+  --tinta: #ecfdf3;
+  --tinta-suave: rgb(220 252 231 / 0.72);
+  --tinta-tenue: rgb(220 252 231 / 0.3);
+  --linea: rgb(187 247 208 / 0.14);
+  --campo: rgb(255 255 255 / 0.05);
+  --campo-foco: #0a1b11;
+  --hoy: rgb(163 230 53 / 0.1);
+  --sombra: rgb(0 0 0 / 0.55);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-fondo: var(--fondo);
+  --color-superficie: var(--superficie);
+  --color-superficie-suave: var(--superficie-suave);
+  --color-tinta: var(--tinta);
+  --color-tinta-suave: var(--tinta-suave);
+  --color-tinta-tenue: var(--tinta-tenue);
+  --color-linea: var(--linea);
+  --color-campo: var(--campo);
+  --color-campo-foco: var(--campo-foco);
+  --color-hoy: var(--hoy);
+  --shadow-tarjeta: 0 10px 40px -12px var(--sombra);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
   background:
-    radial-gradient(60rem 30rem at 50% -10%, rgb(187 247 208 / 0.55), transparent 70%),
-    var(--background);
-  color: var(--foreground);
+    radial-gradient(60rem 30rem at 50% -10%, var(--brillo), transparent 70%),
+    var(--fondo);
+  color: var(--tinta);
   font-family: var(--font-sans), system-ui, sans-serif;
 }

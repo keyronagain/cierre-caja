@@ -67,6 +67,17 @@ export function inicioDeSemana(iso: string): string {
   return sumarDias(iso, -diasDesdeLunes);
 }
 
+/**
+ * Semana (lunes) a mostrar según el parámetro `?semana=YYYY-MM-DD` de la URL.
+ * Un valor inválido cae en la semana actual y no se permiten semanas futuras.
+ */
+export function resolverSemana(parametro: unknown, hoy: string): string {
+  const actual = inicioDeSemana(hoy);
+  if (!esFechaISO(parametro)) return actual;
+  const pedida = inicioDeSemana(parametro);
+  return pedida > actual ? actual : pedida; // "YYYY-MM-DD" ordena como texto
+}
+
 export function diasDeSemana(inicio: string) {
   return NOMBRES_DIAS.map((nombre, i) => ({
     nombre,

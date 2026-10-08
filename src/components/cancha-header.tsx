@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { SelectorTema } from "./selector-tema";
 
 function Pelota({ className }: { className?: string }) {
   // Pelota estilizada: pentágono central, costuras y parches en el borde.
@@ -62,7 +63,7 @@ export function CanchaHeader({ children }: { children?: ReactNode }) {
       {/* Franjas de césped recién cortado */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 bg-[repeating-linear-gradient(90deg,#14532d_0,#14532d_56px,#166534_56px,#166534_112px)]"
+        className="absolute inset-0 -z-10 bg-[repeating-linear-gradient(90deg,#14532d_0,#14532d_56px,#166534_56px,#166534_112px)] dark:bg-[repeating-linear-gradient(90deg,#0c2d18_0,#0c2d18_56px,#0f3a1e_56px,#0f3a1e_112px)]"
       />
       <div
         aria-hidden="true"
@@ -88,7 +89,10 @@ export function CanchaHeader({ children }: { children?: ReactNode }) {
             </h1>
           </div>
         </div>
-        {children}
+        <div className="flex flex-wrap items-center gap-3">
+          {children}
+          <SelectorTema />
+        </div>
       </div>
     </header>
   );

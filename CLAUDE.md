@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 "Cierre Semanal": web app para el cierre de caja semanal de un negocio de canchas (Lunes–Domingo, columnas Efectivo y Sinpe, totales por fila y semanales, rango de fechas autogenerado, historial de semanas cerradas que nunca se borran). Multi-dispositivo y pensada para agregar usuarios después. La UI y los mensajes están en español.
 
-**Estado actual:** implementada la tabla de cierre de la semana actual (Lun–Dom, Efectivo/Sinpe, totales en vivo) con guardado en DB. Pendiente: historial de semanas cerradas, usuarios y autenticación (hoy cualquiera puede escribir en `/api/cierre`).
+**Estado actual:** tabla de cierre (Lun–Dom, Efectivo/Sinpe, totales en vivo) con guardado en DB, navegación entre semanas (`?semana=YYYY-MM-DD`, sin semanas futuras) y modo claro/oscuro. Pendiente: usuarios y autenticación (hoy cualquiera puede escribir en `/api/cierre`).
 
 ## Comandos
 
@@ -36,7 +36,8 @@ No hay framework de tests configurado todavía.
   - `src/lib/prisma.ts`: `getPrisma()` crea el cliente de forma perezosa con el adapter `PrismaPg` y lo guarda en `globalThis`. Lanza error si falta `DATABASE_URL`, por eso los llamadores deben capturarlo (la app arranca sin DB).
 - **Backend = Route Handlers** en `src/app/api/**/route.ts`: `api/cierre` (POST, valida y hace upsert de la `Semana` + 7 `DiaCierre`; volver a guardar la misma semana corrige los montos, nunca se borra) y `api/health`.
 - **Modelo:** `Semana` (`fechaInicio` único, siempre lunes) 1—N `DiaCierre` (`efectivo`/`sinpe` en colones enteros, `Int`). Fechas como string `YYYY-MM-DD` y columnas `@db.Date`.
-- **`src/lib/semana.ts`:** lógica pura (semana Lun–Dom, "hoy" en zona `America/Costa_Rica` porque el servidor corre en UTC, formato de montos, validación del POST). La página (`src/app/page.tsx`) lee la semana actual en un componente async con `connection()` y se la pasa al componente cliente `src/components/tabla-cierre.tsx`, que calcula todos los totales en vivo sin ir a la DB.
+- **`src/lib/semana.ts`:** lógica pura (semana Lun–Dom, "hoy" en zona `America/Costa_Rica` porque el servidor corre en UTC, `resolverSemana` para el parámetro `?semana=`, formato de montos, validación del POST). La página (`src/app/page.tsx`) recibe `searchParams` como promesa y la lee dentro de componentes async con `connection()` y `<Suspense>`; el componente cliente `src/components/tabla-cierre.tsx` recibe la semana y lo guardado, calcula todos los totales en vivo y navega entre semanas con `router.push` (el `key={inicio}` reinicia su estado al cambiar de semana).
+- **Tema claro/oscuro:** clase `dark` en `<html>` (`@custom-variant dark` en `globals.css`). Un script inline en `layout.tsx` la aplica antes de pintar según `localStorage["tema"]` o, si no hay, `prefers-color-scheme`; `selector-tema.tsx` hace el toggle. Los colores van como tokens semánticos (`bg-superficie`, `text-tinta`, `border-linea`, `bg-campo`…) definidos como variables CSS en `globals.css`; usarlos en vez de colores fijos para que el modo oscuro funcione.
 - ESLint (`react-hooks/error-boundaries`) prohíbe construir JSX dentro de `try/catch`: capturar el error en una función aparte que devuelva un resultado y renderizar fuera (patrón en `src/app/page.tsx`).
 
 ## Entorno
