@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { BotonSalir } from "./boton-salir";
 import { SelectorTema } from "./selector-tema";
 
 function Pelota({ className }: { className?: string }) {
@@ -57,7 +58,14 @@ function LineasDeCancha() {
   );
 }
 
-export function CanchaHeader({ children }: { children?: ReactNode }) {
+export function CanchaHeader({
+  children,
+  conSalir = false,
+}: {
+  children?: ReactNode;
+  /** Muestra el botón para cerrar sesión (no en la pantalla de login). */
+  conSalir?: boolean;
+}) {
   return (
     <header className="relative isolate overflow-hidden rounded-3xl border border-white/10 bg-green-900 shadow-[0_20px_50px_-12px_rgba(5,46,22,0.55)]">
       {/* Franjas de césped recién cortado */}
@@ -75,24 +83,26 @@ export function CanchaHeader({ children }: { children?: ReactNode }) {
         className="absolute -right-10 -top-16 -z-10 size-56 rounded-full bg-lime-300/20 blur-3xl"
       />
 
-      <div className="relative flex flex-col gap-6 p-6 sm:p-8 lg:flex-row lg:items-end lg:justify-between lg:p-10">
-        <div className="flex items-center gap-4 sm:gap-5">
-          <div className="grid size-16 shrink-0 place-items-center rounded-2xl bg-white/10 ring-1 ring-white/20 backdrop-blur-xl sm:size-20">
-            <Pelota className="size-11 drop-shadow-[0_4px_6px_rgba(0,0,0,0.35)] sm:size-14" />
+      <div className="relative grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-5 p-5 sm:gap-x-4 sm:p-8 lg:grid-cols-[1fr_auto_auto] lg:items-end lg:p-10">
+        <div className="flex min-w-0 items-center gap-3 sm:gap-5">
+          <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white/10 ring-1 ring-white/20 backdrop-blur-xl sm:size-20">
+            <Pelota className="size-8 drop-shadow-[0_4px_6px_rgba(0,0,0,0.35)] sm:size-14" />
           </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-lime-300">
-              Canchas · Efectivo y Sinpe
+              <span className="hidden sm:inline">Canchas · </span>Efectivo y Sinpe
             </p>
-            <h1 className="mt-1 text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">
+            <h1 className="mt-1 whitespace-nowrap text-xl font-bold tracking-tight text-white sm:text-4xl">
               Cierre Semanal
             </h1>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          {children}
+        {/* Botones de tema y salir: junto al título en móvil, a la derecha del rango en escritorio. */}
+        <div className="flex items-center gap-2 sm:gap-3 lg:order-3">
           <SelectorTema />
+          {conSalir && <BotonSalir />}
         </div>
+        <div className="col-span-2 lg:order-2 lg:col-span-1">{children}</div>
       </div>
     </header>
   );

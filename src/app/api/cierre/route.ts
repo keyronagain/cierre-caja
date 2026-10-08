@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { obtenerSesion, origenValido } from "@/lib/auth";
 import { getPrisma } from "@/lib/prisma";
 import {
   aFechaDB,
@@ -12,6 +13,20 @@ import {
 // Guarda (o actualiza) el cierre de una semana. Las semanas nunca se borran:
 // volver a guardar la misma semana solo corrige sus montos.
 export async function POST(request: Request) {
+  // El proxy ya exige sesión; se vuelve a comprobar aquí para no depender solo de él.
+  if (!(await obtenerSesion())) {
+    return NextResponse.json(
+      { ok: false, error: "No autorizado" },
+      { status: 401 },
+    );
+  }
+  if (!origenValido(request)) {
+    return NextResponse.json(
+      { ok: false, error: "Origen no permitido" },
+      { status: 403 },
+    );
+  }
+
   let cuerpo: unknown;
   try {
     cuerpo = await request.json();

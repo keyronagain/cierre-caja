@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 "Cierre Semanal": web app para el cierre de caja semanal de un negocio de canchas (Lunes–Domingo, columnas Efectivo y Sinpe, totales por fila y semanales, rango de fechas autogenerado, historial de semanas cerradas que nunca se borran). Multi-dispositivo y pensada para agregar usuarios después. La UI y los mensajes están en español.
 
-**Estado actual:** tabla de cierre (Lun–Dom, Efectivo/Sinpe, totales en vivo) con guardado en DB, navegación entre semanas (`?semana=YYYY-MM-DD`, sin semanas futuras) y modo claro/oscuro. Pendiente: usuarios y autenticación (hoy cualquiera puede escribir en `/api/cierre`).
+**Estado actual:** tabla de cierre (Lun–Dom, Efectivo/Sinpe, totales en vivo) con guardado en DB, navegación entre semanas (`?semana=YYYY-MM-DD`, sin semanas futuras), modo claro/oscuro y login con usuarios en la base que protege toda la app.
 
 ## Comandos
 
@@ -17,6 +17,7 @@ npm run lint         # eslint
 npx tsc --noEmit     # typecheck solo
 npm run db:push      # sincroniza prisma/schema.prisma con la DB
 npm run db:migrate   # prisma migrate dev
+npm run crear-usuario # crea/actualiza un usuario (ver sección Entorno)
 npx prisma generate  # regenera el cliente (corre solo en postinstall)
 ```
 
@@ -38,10 +39,13 @@ No hay framework de tests configurado todavía.
 - **Modelo:** `Semana` (`fechaInicio` único, siempre lunes) 1—N `DiaCierre` (`efectivo`/`sinpe` en colones enteros, `Int`). Fechas como string `YYYY-MM-DD` y columnas `@db.Date`.
 - **`src/lib/semana.ts`:** lógica pura (semana Lun–Dom, "hoy" en zona `America/Costa_Rica` porque el servidor corre en UTC, `resolverSemana` para el parámetro `?semana=`, formato de montos, validación del POST). La página (`src/app/page.tsx`) recibe `searchParams` como promesa y la lee dentro de componentes async con `connection()` y `<Suspense>`; el componente cliente `src/components/tabla-cierre.tsx` recibe la semana y lo guardado, calcula todos los totales en vivo y navega entre semanas con `router.push` (el `key={inicio}` reinicia su estado al cambiar de semana).
 - **Tema claro/oscuro:** clase `dark` en `<html>` (`@custom-variant dark` en `globals.css`). Un script inline en `layout.tsx` la aplica antes de pintar según `localStorage["tema"]` o, si no hay, `prefers-color-scheme`; `selector-tema.tsx` hace el toggle. Los colores van como tokens semánticos (`bg-superficie`, `text-tinta`, `border-linea`, `bg-campo`…) definidos como variables CSS en `globals.css`; usarlos en vez de colores fijos para que el modo oscuro funcione.
+- **Autenticación (sin librería):** tabla `usuarios` (`Usuario`: nombre único en minúsculas, `claveHash` scrypt `sal:hash` de `src/lib/clave.ts`, `intentosFallidos`/`bloqueadoHasta`: 5 fallos bloquean 15 min). Sesión = JWT HS256 (`jose`) en cookie httpOnly `sesion` (30 días, firmado con `SESSION_SECRET`, mín. 32 caracteres; sin ella el login falla cerrado con 503) — `src/lib/sesion.ts` no importa `next/headers` para poder usarse en el proxy. `src/proxy.ts` (el `middleware` de Next 16) redirige a `/login` o responde 401 en `/api/*` sin sesión; son públicas solo `/login`, `/api/login`, `/api/logout` y `/api/health` (que devuelve solo `{ok}`). Además `src/app/page.tsx` y `api/cierre` vuelven a verificar la sesión con `obtenerSesion()` (`src/lib/auth.ts`) y los POST validan `Origin` (`origenValido`): no depender solo del proxy. Login: `api/login`, `api/logout`, `src/app/login/`, `formulario-login.tsx`, `boton-salir.tsx`. Revocar todas las sesiones = cambiar `SESSION_SECRET`. No hay registro público.
 - ESLint (`react-hooks/error-boundaries`) prohíbe construir JSX dentro de `try/catch`: capturar el error en una función aparte que devuelva un resultado y renderizar fuera (patrón en `src/app/page.tsx`).
 
 ## Entorno
 
 Copiar `.env.example` a `.env.local` y completar `DATABASE_URL`. El esquema se crea con `npm run db:push`. Sin `DATABASE_URL`, la tabla igual se muestra (con aviso) y `/api/health` responde 500 controlado.
+
+Además hace falta `SESSION_SECRET` (también en Vercel → Environment Variables; generar: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`). Para crear un usuario o cambiar su clave (usa `DATABASE_URL` de `.env.local`): en PowerShell `$env:NUEVO_USUARIO="maria"; $env:NUEVA_CLAVE="una-clave-larga"; npm run crear-usuario` y luego `Remove-Item Env:NUEVA_CLAVE`. Nunca escribir en la base real claves de prueba: para probar login usar la base local desechable de abajo con un usuario/clave generados al azar.
 
 Para probar el guardado sin tocar la DB real: `npx prisma dev --detach --name test` levanta un Postgres local desechable; apuntar `DATABASE_URL` a su URL TCP al correr `db:push` y `npm run dev` (las variables ya definidas en el entorno tienen prioridad sobre `.env.local`).

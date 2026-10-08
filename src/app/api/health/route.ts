@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { getPrisma } from "@/lib/prisma";
 
+// Público a propósito (sirve para monitoreo), por eso no devuelve datos ni detalles
+// del error: solo si la base responde.
 export async function GET() {
   try {
-    const semanas = await getPrisma().semana.count();
-    return NextResponse.json({ ok: true, semanas });
+    await getPrisma().semana.count();
+    return NextResponse.json({ ok: true });
   } catch (error) {
-    const mensaje = error instanceof Error ? error.message : "Error desconocido";
-    return NextResponse.json({ ok: false, error: mensaje }, { status: 500 });
+    console.error("health: la base no responde", error);
+    return NextResponse.json({ ok: false }, { status: 500 });
   }
 }

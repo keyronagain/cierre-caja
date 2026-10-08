@@ -19,20 +19,29 @@ Web app para el cierre semanal de caja (Lunes a Domingo, Efectivo y Sinpe).
    cp .env.example .env.local
    ```
 
-3. Crear las tablas:
+3. Agregar `SESSION_SECRET` a `.env.local` (cadena al azar de 32+ caracteres, ver `.env.example`).
+
+4. Crear las tablas:
 
    ```bash
    npm run db:push
    ```
 
-4. Correr en desarrollo:
+5. Crear tu usuario (PowerShell):
+
+   ```powershell
+   $env:NUEVO_USUARIO="tu-usuario"; $env:NUEVA_CLAVE="una-clave-larga"; npm run crear-usuario
+   Remove-Item Env:NUEVA_CLAVE
+   ```
+
+6. Correr en desarrollo:
 
    ```bash
    npm run dev
    ```
 
-   Abrí <http://localhost:3000>. La página indica si la base de datos está
-   conectada; `GET /api/health` devuelve el mismo estado en JSON.
+   Abrí <http://localhost:3000> e iniciá sesión con el usuario que creaste.
+   `GET /api/health` responde `{"ok":true}` si la base está conectada.
 
 ## Scripts
 
@@ -43,10 +52,14 @@ Web app para el cierre semanal de caja (Lunes a Domingo, Efectivo y Sinpe).
 | `npm run lint`       | ESLint                                          |
 | `npm run db:push`    | Sincroniza el esquema con la base de datos      |
 | `npm run db:migrate` | Crea y aplica una migración (`prisma migrate`)  |
+| `npm run crear-usuario` | Crea un usuario o cambia su contraseña      |
 
 ## Estructura
 
-- `prisma/schema.prisma` — esquema (por ahora solo la tabla `semanas`).
+- `prisma/schema.prisma` — esquema: `semanas`, `dias_cierre` y `usuarios`.
+- `src/lib/semana.ts` — lógica pura de semanas, fechas y montos.
 - `src/lib/prisma.ts` — cliente de Prisma (singleton, usa `DATABASE_URL`).
-- `src/app/page.tsx` — página inicial con el estado de la conexión.
-- `src/app/api/health/route.ts` — endpoint de verificación.
+- `src/lib/sesion.ts`, `src/lib/clave.ts`, `src/lib/auth.ts`, `src/proxy.ts` — login y protección de rutas.
+- `src/app/page.tsx` + `src/components/tabla-cierre.tsx` — tabla de cierre semanal.
+- `src/app/api/cierre`, `login`, `logout`, `health` — API.
+- `scripts/crear-usuario.mjs` — alta de usuarios.

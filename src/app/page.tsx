@@ -1,8 +1,10 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { CalendarDays } from "lucide-react";
 import { CanchaHeader } from "@/components/cancha-header";
 import { TablaCierre } from "@/components/tabla-cierre";
+import { obtenerSesion } from "@/lib/auth";
 import { getPrisma } from "@/lib/prisma";
 import {
   aFechaDB,
@@ -49,6 +51,8 @@ async function leerCierre(inicio: string): Promise<Guardado> {
 // del prerender (Cache Components) y se lee dentro de un <Suspense>.
 async function semanaSolicitada(searchParams: ParametrosBusqueda) {
   await connection();
+  // El proxy ya redirige sin sesión; se comprueba también aquí para no depender solo de él.
+  if (!(await obtenerSesion())) redirect("/login");
   const hoy = hoyISO();
   const { semana } = await searchParams;
   return {
@@ -122,7 +126,7 @@ export default function Home({ searchParams }: PageProps<"/">) {
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-36 pt-4 sm:px-6 sm:pt-6 md:pb-12">
       <div className="flex flex-col gap-6">
-        <CanchaHeader>
+        <CanchaHeader conSalir>
           <Suspense fallback={<RangoEsqueleto />}>
             <RangoSemana searchParams={searchParams} />
           </Suspense>

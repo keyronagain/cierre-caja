@@ -34,3 +34,15 @@ model DiaCierre {
   @@unique([semanaId, fecha])
   @@map("dias_cierre")
 }
+
+// Quien puede entrar a la app. Sin registro público: se crean con `npm run crear-usuario`.
+model Usuario {
+  id               Int       @id @default(autoincrement())
+  nombre           String    @unique // siempre en minúsculas
+  claveHash        String // "sal:hash" (scrypt), ver src/lib/clave.ts
+  creadoEn         DateTime  @default(now())
+  intentosFallidos Int       @default(0)
+  bloqueadoHasta   DateTime?
+
+  @@map("usuarios")
+}
