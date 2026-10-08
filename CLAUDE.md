@@ -24,7 +24,7 @@ No hay framework de tests configurado todavía.
 
 ## Flujo de trabajo
 
-- Hacer un commit de git (mensaje descriptivo en español) después de cada cambio verificado (compila/lint/corre sin errores), sin esperar a que se pida. Remoto: `origin` → `github.com/keyronagain/cierre-caja`, rama `main`.
+- Después de cada cambio verificado (compila/lint/corre sin errores): commit (mensaje descriptivo en español) **y `git push` a `origin main`**, siempre y sin preguntar. Vercel despliega desde GitHub, así que un cambio sin push no se ve en producción. Al terminar, confirmar que `git status -sb` no diga "ahead". Remoto: `origin` → `github.com/keyronagain/cierre-caja`, rama `main`.
 - Este directorio está dentro del repo git de `C:\Users\keyro`; el repo propio del proyecto es `cierre-caja/.git`, así que los comandos git deben correr dentro de esta carpeta.
 
 ## Arquitectura
