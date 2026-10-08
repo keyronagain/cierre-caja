@@ -1,0 +1,20 @@
+// Esquema base. Por ahora solo la tabla Semana, para probar la conexión.
+// Más adelante se extiende con los días (efectivo/sinpe), cierre y usuarios.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Semana {
+  id          Int      @id @default(autoincrement())
+  fechaInicio DateTime @db.Date
+  fechaFin    DateTime @db.Date
+  creadaEn    DateTime @default(now())
+
+  @@map("semanas")
+}
